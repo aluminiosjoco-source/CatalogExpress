@@ -186,7 +186,7 @@
         <p class="text-gray-500 mb-6">
           Aún no se han agregado productos al catálogo.
         </p>
-        <a href="/dashboard/productos" class="btn-primary inline-block">
+        <a href="/dashboard" class="btn-primary inline-block">
           Ir al panel de administración
         </a>
       </div>

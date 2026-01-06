@@ -1,7 +1,7 @@
 <!-- src/lib/components/ui/Header.svelte -->
-<!-- ✅ MEJORADO: Con icono de Google Maps para la ubicación del negocio -->
+<!-- ✅ ACTUALIZADO: Icono de Home agregado para ir a la página de empresa -->
 <script>
-  import { Menu, X, ShoppingCart, Store, Settings, MapPin } from 'lucide-svelte';
+  import { Menu, X, ShoppingCart, Store, Settings, Home } from 'lucide-svelte';
   import { cantidadItems } from '$lib/stores/carritoStore';
   import CarritoIcon from '$lib/components/cart/CarritoIcon.svelte';
   
@@ -11,6 +11,7 @@
   
   const navLinksMobile = [
     { href: '/', label: 'Catálogo' },
+    { href: '/empresa', label: 'Acerca de' },
     { href: '/carrito', label: 'Mi Carrito' }
   ];
   
@@ -24,9 +25,6 @@
   
   $: redesSociales = configuracion?.redes_sociales || {};
   $: tieneRedes = Object.values(redesSociales).some(url => url);
-  
-  // ✅ NUEVO: Obtener URL de Google Maps de la ubicación
-  $: ubicacionMaps = configuracion?.ubicacion?.google_maps_url || null;
 </script>
 
 <header class="bg-white shadow-md sticky top-0 z-50">
@@ -50,25 +48,20 @@
         </span>
       </a>
       
-      <!-- Desktop: Redes sociales + Ubicación + Carrito -->
+      <!-- Desktop: Iconos + Redes sociales + Carrito -->
       <div class="hidden md:flex items-center">
-        <!-- ✅ NUEVO: Contenedor con Google Maps + Redes Sociales -->
-        {#if tieneRedes || ubicacionMaps}
+        <!-- Icono Home (Acerca de) -->
+        <a 
+          href="/empresa"
+          class="flex items-center space-x-2 text-gray-700 hover:text-primary-600 font-medium transition-colors mr-4"
+          title="Acerca de Nosotros"
+        >
+          <Home class="w-5 h-5" />
+          <span class="text-sm">Empresa</span>
+        </a>
+        
+        {#if tieneRedes}
           <div class="flex items-center gap-3 pr-6 mr-6 border-r border-gray-200">
-            <!-- ✅ NUEVO: Icono de Google Maps -->
-            {#if ubicacionMaps}
-              <a 
-                href={ubicacionMaps}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-gray-600 hover:text-red-600 transition-colors"
-                title="Ver ubicación en Google Maps"
-              >
-                <MapPin class="w-5 h-5" />
-              </a>
-            {/if}
-            
-            <!-- Redes sociales existentes -->
             {#if redesSociales.facebook}
               <a 
                 href={redesSociales.facebook}
@@ -130,6 +123,14 @@
       <!-- Mobile: Iconos -->
       <div class="flex items-center space-x-4 md:hidden">
         <a 
+          href="/empresa"
+          class="p-2 rounded-md text-gray-700 hover:bg-gray-100"
+          title="Empresa"
+        >
+          <Home class="w-5 h-5" />
+        </a>
+        
+        <a 
           href="/dashboard"
           class="p-2 rounded-md text-gray-700 hover:bg-gray-100"
           title="Panel"
@@ -153,23 +154,10 @@
       </div>
     </div>
     
-    <!-- ✅ MEJORADO: Redes sociales móvil con Google Maps -->
-    {#if tieneRedes || ubicacionMaps}
+    <!-- Redes sociales móvil (debajo del header) -->
+    {#if tieneRedes}
       <div class="md:hidden border-t border-gray-100 py-3">
         <div class="flex items-center justify-center gap-6">
-          <!-- ✅ NUEVO: Google Maps en móvil -->
-          {#if ubicacionMaps}
-            <a 
-              href={ubicacionMaps}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="text-gray-600 hover:text-red-600 transition-colors"
-              title="Ver ubicación"
-            >
-              <MapPin class="w-5 h-5" />
-            </a>
-          {/if}
-          
           {#if redesSociales.facebook}
             <a 
               href={redesSociales.facebook}
@@ -240,20 +228,6 @@
             <Settings class="w-5 h-5" />
             <span>Panel</span>
           </a>
-          
-          <!-- ✅ NUEVO: Enlace a ubicación en menú móvil -->
-          {#if ubicacionMaps}
-            <a 
-              href={ubicacionMaps}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md font-medium flex items-center space-x-2"
-              on:click={() => menuAbierto = false}
-            >
-              <MapPin class="w-5 h-5" />
-              <span>Ver Ubicación</span>
-            </a>
-          {/if}
         </div>
       </div>
     {/if}

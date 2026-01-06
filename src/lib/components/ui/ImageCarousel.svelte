@@ -1,5 +1,5 @@
 <!-- src/lib/components/ui/ImageCarousel.svelte -->
-<!-- ✅ CORREGIDO: Compatible con arrays de strings y objetos -->
+<!-- ✅ MEJORADO: Responsive optimizado, tamaño ajustable, mejor distribución -->
 <script>
   import { onMount, onDestroy } from 'svelte';
   import { ChevronLeft, ChevronRight, ShoppingBag, Star, Shield, Truck } from 'lucide-svelte';
@@ -11,6 +11,7 @@
   export let subtitulo = '';
   export let ctaTexto = 'Explorar Catálogo';
   export let ctaEnlace = '/productos';
+  export let altura = 'small'; // 'small' | 'medium' | 'large'
   export let tema = {
     primary: '#3B82F6',
     primaryLight: '#93C5FD',
@@ -18,7 +19,7 @@
     text: '#FFFFFF'
   };
 
-  // ✅ Normalizar imagenes: aceptar strings o objetos
+  // ✅ Normalizar imagenes
   $: imagenesNormalizadas = imagenes.map(img => {
     if (typeof img === 'string') {
       return { url: img };
@@ -29,26 +30,26 @@
   let currentIndex = 0;
   let intervalId = null;
   let isPaused = false;
-  let isMobile = false;
   let touchStartX = 0;
   let touchEndX = 0;
 
   const AUTO_SLIDE_INTERVAL = 5000;
 
-  // Características
   const features = [
     { icon: Star, text: 'Productos Premium', color: '#FBBF24' },
     { icon: Shield, text: 'Garantía de Calidad', color: '#10B981' },
     { icon: Truck, text: 'Envío Rápido', color: '#8B5CF6' }
   ];
 
-  // ✅ Check móvil - solo en cliente
-  function checkMobile() {
-    if (!browser) return;
-    isMobile = window.innerWidth < 768;
-  }
+  // ✅ Alturas responsivas optimizadas
+  const alturas = {
+    small: 'h-[35vh] min-h-[280px] max-h-[400px]',
+    medium: 'h-[50vh] min-h-[400px] max-h-[600px]',
+    large: 'h-[70vh] min-h-[500px] max-h-[800px]'
+  };
 
-  // Navegación
+  $: claseAltura = alturas[altura] || alturas.small;
+
   function nextSlide() {
     currentIndex = (currentIndex + 1) % imagenesNormalizadas.length;
   }
@@ -62,7 +63,6 @@
     resetAutoSlide();
   }
 
-  // Touch gestures
   function handleTouchStart(event) {
     if (!browser) return;
     touchStartX = event.touches[0].clientX;
@@ -79,17 +79,11 @@
   function handleSwipe() {
     const swipeThreshold = 50;
     const diff = touchStartX - touchEndX;
-
     if (Math.abs(diff) > swipeThreshold) {
-      if (diff > 0) {
-        nextSlide();
-      } else {
-        prevSlide();
-      }
+      diff > 0 ? nextSlide() : prevSlide();
     }
   }
 
-  // Auto slide
   function startAutoSlide() {
     if (!browser) return;
     if (intervalId) clearInterval(intervalId);
@@ -114,641 +108,147 @@
     isPaused = false;
   }
 
-  // Lifecycle
   onMount(() => {
     if (!browser) return;
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
     startAutoSlide();
   });
 
   onDestroy(() => {
     if (!browser) return;
     if (intervalId) clearInterval(intervalId);
-    window.removeEventListener('resize', checkMobile);
   });
 
-  // Estilos dinámicos
   function getGradient() {
     return `linear-gradient(135deg, ${tema.primary} 0%, ${tema.primaryDark} 100%)`;
   }
 
   function getOverlayGradient() {
-    return `linear-gradient(to bottom, 
-              rgba(0, 0, 0, 0.3) 0%,
-              rgba(0, 0, 0, 0.5) 50%,
-              rgba(0, 0, 0, 0.7) 100%)`;
+    return `linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.7) 100%)`;
   }
 </script>
 
 <div 
-  class="carousel-container"
+  class="carousel-container {claseAltura} w-full rounded-lg md:rounded-xl overflow-hidden"
   on:mouseenter={pauseCarousel}
   on:mouseleave={resumeCarousel}
   on:touchstart={handleTouchStart}
   on:touchend={handleTouchEnd}
 >
-  
   {#if imagenesNormalizadas && imagenesNormalizadas.length > 0}
-    <!-- Carrusel principal -->
-    <div class="carousel-wrapper">
+    <div class="carousel-wrapper relative w-full h-full">
       {#each imagenesNormalizadas as imagen, index}
         <div 
-          class="carousel-slide {index === currentIndex ? 'active' : ''}"
-          style="background-image: url('{imagen.url}');"
+          class="carousel-slide absolute inset-0 transition-opacity duration-700 {index === currentIndex ? 'opacity-100 z-10' : 'opacity-0'}"
+          style="background-image: url('{imagen.url}'); background-size: cover; background-position: center;"
         >
+          <div class="absolute inset-0" style="background: {getOverlayGradient()}"></div>
           
-          <!-- Overlay con gradiente -->
-          <div class="image-overlay" style="background: {getOverlayGradient()}"></div>
-          
-          <!-- Contenido -->
-          <div class="slide-content">
-            <!-- Badge destacado -->
-            <div class="feature-badge" style="background-color: {tema.primary}">
-              <span>✨ Destacado</span>
-            </div>
-            
-            <!-- Título principal -->
-            <h1 class="slide-title" style="color: {tema.text}">
-              {titulo}
-            </h1>
-            
-            <!-- Subtítulo -->
-            <p class="slide-subtitle">
-              {subtitulo}
-            </p>
-            
-            <!-- Características -->
-            <div class="features-grid">
-              {#each features as feature}
-                <div class="feature-item">
-                  <div class="feature-icon" style="color: {feature.color}">
-                    <svelte:component this={feature.icon} class="w-5 h-5" />
-                  </div>
-                  <span class="feature-text">{feature.text}</span>
-                </div>
-              {/each}
-            </div>
-            
-            <!-- CTA -->
-            <div class="slide-actions">
-              <a 
-                href={ctaEnlace} 
-                class="cta-button"
-                style="background-color: {tema.primary}; color: {tema.text}"
-              >
-                <ShoppingBag class="w-4 h-4 md:w-5 md:h-5" />
-                {ctaTexto}
-              </a>
+          <div class="relative z-20 h-full flex items-center justify-center px-4 sm:px-6">
+            <div class="text-center max-w-4xl w-full">
+              <div class="inline-block px-3 py-1.5 rounded-full mb-3 md:mb-4" style="background-color: {tema.primary}">
+                <span class="text-white text-xs md:text-sm font-semibold">✨ Destacado</span>
+              </div>
               
-              <a 
-                href="/contacto" 
-                class="secondary-button"
-                style="border-color: {tema.primary}; color: {tema.primary}"
-              >
-                Contactar
-              </a>
+              <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 md:mb-3" style="color: {tema.text}; text-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+                {titulo}
+              </h1>
+              
+              <p class="text-sm sm:text-base md:text-lg mb-4 md:mb-6 opacity-90" style="color: {tema.text}; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                {subtitulo}
+              </p>
+              
+              <div class="grid grid-cols-3 gap-2 md:gap-3 mb-4 md:mb-6 max-w-lg mx-auto">
+                {#each features as feature}
+                  <div class="flex flex-col items-center gap-1.5 p-2 md:p-3 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
+                    <div class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/20 flex items-center justify-center">
+                      <svelte:component this={feature.icon} class="w-4 h-4 md:w-5 md:h-5" style="color: {feature.color}" />
+                    </div>
+                    <span class="text-xs md:text-sm font-semibold text-white text-center leading-tight">{feature.text}</span>
+                  </div>
+                {/each}
+              </div>
+              
+              <div class="flex flex-col sm:flex-row gap-2 md:gap-3 justify-center items-center">
+                <a 
+                  href={ctaEnlace}
+                  class="inline-flex items-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-full font-semibold text-sm md:text-base shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5"
+                  style="background-color: {tema.primary}; color: {tema.text}"
+                >
+                  <ShoppingBag class="w-4 h-4 md:w-5 md:h-5" />
+                  {ctaTexto}
+                </a>
+                <a 
+                  href="/empresa"
+                  class="inline-flex items-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-full font-semibold text-sm md:text-base bg-transparent border-2 hover:bg-white/10 transition-all"
+                  style="border-color: {tema.primary}; color: {tema.primary}"
+                >
+                  Conócenos
+                </a>
+              </div>
             </div>
           </div>
         </div>
       {/each}
       
-      <!-- Controles - Solo si hay más de una imagen -->
       {#if imagenesNormalizadas.length > 1}
         <button 
-          class="nav-button prev"
+          class="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white opacity-90 hover:opacity-100 transition-all hover:scale-110"
           on:click={prevSlide}
           style="background-color: {tema.primary}"
-          aria-label="Anterior"
         >
-          <ChevronLeft class="w-6 h-6" />
+          <ChevronLeft class="w-5 h-5 md:w-6 md:h-6" />
         </button>
         
         <button 
-          class="nav-button next"
+          class="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white opacity-90 hover:opacity-100 transition-all hover:scale-110"
           on:click={nextSlide}
           style="background-color: {tema.primary}"
-          aria-label="Siguiente"
         >
-          <ChevronRight class="w-6 h-6" />
+          <ChevronRight class="w-5 h-5 md:w-6 md:h-6" />
         </button>
         
-        <!-- Indicadores -->
-        <div class="indicators-container">
-          <div class="indicators">
+        <div class="absolute bottom-3 md:bottom-4 left-0 right-0 z-30 flex flex-col items-center gap-2">
+          <div class="flex gap-1.5">
             {#each imagenesNormalizadas as _, index}
               <button 
-                class="indicator {index === currentIndex ? 'active' : ''}"
+                class="h-1.5 rounded-full transition-all {index === currentIndex ? 'w-8 md:w-10' : 'w-6 md:w-8'}"
+                style={index === currentIndex ? `background-color: ${tema.primary}` : 'background-color: rgba(255,255,255,0.3)'}
                 on:click={() => goToSlide(index)}
-                style={index === currentIndex ? `background-color: ${tema.primary}` : ''}
-                aria-label={`Slide ${index + 1}`}
-              >
-                <span class="indicator-number">{index + 1}</span>
-              </button>
+              />
             {/each}
           </div>
-          
-          <!-- Contador -->
-          <div class="slide-counter" style="color: {tema.text}">
-            <span class="current">{currentIndex + 1}</span>
-            <span class="separator">/</span>
-            <span class="total">{imagenesNormalizadas.length}</span>
+          <div class="text-xs md:text-sm font-semibold px-2 py-1 rounded-full bg-black/30 backdrop-blur-sm" style="color: {tema.text}">
+            {currentIndex + 1} / {imagenesNormalizadas.length}
           </div>
         </div>
       {/if}
     </div>
   {:else}
-    <!-- Fallback hero sin imágenes -->
-    <div class="gradient-hero" style="background: {getGradient()}">
-      <div class="gradient-content">
-        <!-- Animación decorativa -->
-        <div class="floating-shapes">
-          <div class="shape shape-1" style="background-color: {tema.primaryLight}"></div>
-          <div class="shape shape-2" style="background-color: {tema.primary}"></div>
-          <div class="shape shape-3" style="background-color: {tema.primaryDark}"></div>
-        </div>
-        
-        <h1 class="hero-title" style="color: {tema.text}">
+    <div class="w-full h-full flex items-center justify-center p-4 md:p-8" style="background: {getGradient()}">
+      <div class="text-center max-w-3xl relative z-10">
+        <h1 class="text-3xl md:text-5xl font-bold mb-4" style="color: {tema.text}">
           {titulo || 'Tu Tienda Online'}
         </h1>
-        
-        <p class="hero-subtitle">
+        <p class="text-base md:text-xl mb-6 opacity-90" style="color: {tema.text}">
           {subtitulo || 'Productos de calidad con envío a todo el país'}
         </p>
-        
-        <!-- Características en fallback -->
-        <div class="features-fallback">
+        <div class="flex flex-col sm:flex-row gap-3 justify-center mb-6">
           {#each features as feature}
-            <div class="feature-fallback">
-              <svelte:component this={feature.icon} class="w-6 h-6" style="color: {feature.color}" />
-              <span>{feature.text}</span>
+            <div class="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-lg backdrop-blur-sm">
+              <svelte:component this={feature.icon} class="w-5 h-5" style="color: {feature.color}" />
+              <span class="text-sm font-semibold text-white">{feature.text}</span>
             </div>
           {/each}
         </div>
-        
-        <!-- CTA -->
-        <div class="hero-actions">
-          <a 
-            href={ctaEnlace} 
-            class="cta-button-large"
-            style="background-color: {tema.text}; color: {tema.primary}"
-          >
-            <ShoppingBag class="w-5 h-5" />
-            {ctaTexto}
-          </a>
-        </div>
+        <a 
+          href={ctaEnlace}
+          class="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold shadow-lg"
+          style="background-color: {tema.text}; color: {tema.primary}"
+        >
+          <ShoppingBag class="w-5 h-5" />
+          {ctaTexto}
+        </a>
       </div>
     </div>
   {/if}
 </div>
-
-<style>
-  .carousel-container {
-    position: relative;
-    width: 100%;
-    height: 48vh;
-    min-height: 400px;
-    overflow: hidden;
-    border-radius: 1rem;
-    margin-bottom: 2rem;
-  }
-
-  @media (min-width: 768px) {
-    .carousel-container {
-      height: 72vh;
-      border-radius: 1.5rem;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .carousel-container {
-      height: 96vh;
-      max-height: 900px;
-      border-radius: 2rem;
-    }
-  }
-
-  /* Carrusel principal */
-  .carousel-wrapper {
-    position: relative;
-    width: 100%;
-    height: 100%;
-  }
-
-  .carousel-slide {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 0;
-    transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .carousel-slide.active {
-    opacity: 1;
-    z-index: 1;
-  }
-
-  .image-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-  }
-
-  .slide-content {
-    position: relative;
-    z-index: 2;
-    text-align: center;
-    padding: 2rem;
-    max-width: 90%;
-    width: 100%;
-  }
-
-  @media (min-width: 768px) {
-    .slide-content {
-      max-width: 800px;
-      padding: 3rem;
-    }
-  }
-
-  /* Feature badge */
-  .feature-badge {
-    display: inline-block;
-    padding: 0.5rem 1rem;
-    border-radius: 2rem;
-    margin-bottom: 1.5rem;
-    color: white;
-    font-weight: 600;
-    font-size: 0.875rem;
-    letter-spacing: 0.05em;
-    animation: float 3s ease-in-out infinite;
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
-  }
-
-  /* Título */
-  .slide-title {
-    font-size: 2.5rem;
-    font-weight: 900;
-    margin-bottom: 1rem;
-    text-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-    line-height: 1.1;
-  }
-
-  @media (min-width: 768px) {
-    .slide-title {
-      font-size: 4rem;
-      margin-bottom: 1.5rem;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .slide-title {
-      font-size: 5rem;
-    }
-  }
-
-  /* Subtítulo */
-  .slide-subtitle {
-    font-size: 1.125rem;
-    line-height: 1.6;
-    margin-bottom: 2rem;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    opacity: 0.9;
-    color: white;
-  }
-
-  @media (min-width: 768px) {
-    .slide-subtitle {
-      font-size: 1.5rem;
-      margin-bottom: 3rem;
-    }
-  }
-
-  /* Features grid */
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-    max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .feature-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(10px);
-    border-radius: 1rem;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-
-  .feature-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 3rem;
-    height: 3rem;
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 50%;
-  }
-
-  .feature-text {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: white;
-  }
-
-  /* Acciones */
-  .slide-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    align-items: center;
-  }
-
-  @media (min-width: 768px) {
-    .slide-actions {
-      flex-direction: row;
-      justify-content: center;
-    }
-  }
-
-  .cta-button, .secondary-button, .cta-button-large {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.875rem 1.75rem;
-    font-size: 1rem;
-    font-weight: 600;
-    border-radius: 9999px;
-    text-decoration: none;
-    transition: all 0.3s ease;
-    cursor: pointer;
-    border: 2px solid transparent;
-  }
-
-  .cta-button {
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
-  }
-
-  .cta-button:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.3);
-  }
-
-  .secondary-button {
-    background: transparent;
-  }
-
-  .secondary-button:hover {
-    background: rgba(255, 255, 255, 0.1);
-  }
-
-  .cta-button-large {
-    padding: 1rem 2rem;
-    font-size: 1.125rem;
-  }
-
-  /* Navegación */
-  .nav-button {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 10;
-    width: 3rem;
-    height: 3rem;
-    border-radius: 50%;
-    border: none;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    opacity: 0.9;
-  }
-
-  .nav-button:hover {
-    opacity: 1;
-    transform: translateY(-50%) scale(1.1);
-  }
-
-  .nav-button.prev {
-    left: 1rem;
-  }
-
-  .nav-button.next {
-    right: 1rem;
-  }
-
-  @media (min-width: 768px) {
-    .nav-button {
-      width: 4rem;
-      height: 4rem;
-    }
-  }
-
-  /* Indicadores */
-  .indicators-container {
-    position: absolute;
-    bottom: 2rem;
-    left: 0;
-    right: 0;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-  }
-
-  .indicators {
-    display: flex;
-    gap: 0.5rem;
-  }
-
-  .indicator {
-    width: 2.5rem;
-    height: 0.5rem;
-    border-radius: 0.25rem;
-    border: none;
-    background: rgba(255, 255, 255, 0.3);
-    cursor: pointer;
-    transition: all 0.3s ease;
-    padding: 0;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .indicator.active {
-    width: 3rem;
-  }
-
-  .indicator:hover {
-    background: rgba(255, 255, 255, 0.5);
-  }
-
-  .indicator-number {
-    display: none;
-  }
-
-  .slide-counter {
-    font-size: 0.875rem;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    background: rgba(0, 0, 0, 0.3);
-    padding: 0.25rem 0.75rem;
-    border-radius: 1rem;
-    backdrop-filter: blur(10px);
-  }
-
-  .current {
-    font-size: 1.25rem;
-  }
-
-  /* Fallback hero */
-  .gradient-hero {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .gradient-content {
-    position: relative;
-    z-index: 2;
-    text-align: center;
-    max-width: 800px;
-    padding: 2rem;
-  }
-
-  /* Floating shapes */
-  .floating-shapes {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-  }
-
-  .shape {
-    position: absolute;
-    border-radius: 50%;
-    opacity: 0.1;
-    animation: float 6s ease-in-out infinite;
-  }
-
-  .shape-1 {
-    width: 200px;
-    height: 200px;
-    top: 10%;
-    left: 5%;
-    animation-delay: 0s;
-  }
-
-  .shape-2 {
-    width: 150px;
-    height: 150px;
-    top: 60%;
-    right: 10%;
-    animation-delay: 2s;
-  }
-
-  .shape-3 {
-    width: 100px;
-    height: 100px;
-    bottom: 20%;
-    left: 15%;
-    animation-delay: 4s;
-  }
-
-  .hero-title {
-    font-size: 2.5rem;
-    font-weight: 900;
-    margin-bottom: 1rem;
-  }
-
-  @media (min-width: 768px) {
-    .hero-title {
-      font-size: 4rem;
-    }
-  }
-
-  .hero-subtitle {
-    font-size: 1.125rem;
-    line-height: 1.6;
-    margin-bottom: 2rem;
-    opacity: 0.9;
-    color: white;
-  }
-
-  @media (min-width: 768px) {
-    .hero-subtitle {
-      font-size: 1.5rem;
-    }
-  }
-
-  /* Features fallback */
-  .features-fallback {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    max-width: 300px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  @media (min-width: 768px) {
-    .features-fallback {
-      flex-direction: row;
-      max-width: 600px;
-    }
-  }
-
-  .feature-fallback {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 0.75rem;
-    backdrop-filter: blur(10px);
-  }
-
-  .feature-fallback span {
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: white;
-  }
-
-  .hero-actions {
-    display: flex;
-    justify-content: center;
-  }
-</style>
