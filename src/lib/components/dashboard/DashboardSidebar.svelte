@@ -17,6 +17,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { auth } from '$lib/stores/authStore';
+  import { BarChart3 } from 'lucide-svelte';
   
   export let collapsed = false;
   export let mobileOpen = false;
@@ -27,6 +28,7 @@
     { icon: Tag, label: 'Categorías', href: '/categorias' },
     { icon: Award, label: 'Marcas', href: '/marcas' },
     { icon: ShoppingBag, label: 'Pedidos', href: '/pedidos' },
+    { icon: BarChart3, label: 'Reportes', href: '/reportes' },
     { icon: MessageCircle, label: 'Mensajes', href: '/mensajes' },
     { icon: Settings, label: 'Configuración', href: '/configuracion' }
   ];

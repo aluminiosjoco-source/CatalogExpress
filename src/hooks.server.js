@@ -12,7 +12,8 @@ export async function handle({ event, resolve }) {
     '/pedidos', 
     '/mensajes',
     '/configuracion',
-    '/categorias'
+    '/categorias',
+    '/reportes' 
   ];
 
   // Si es ruta de login
