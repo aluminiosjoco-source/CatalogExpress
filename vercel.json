@@ -2,5 +2,32 @@
   "buildCommand": "npm run build",
   "outputDirectory": "build",
   "devCommand": "npm run dev",
-  "installCommand": "npm install"
+  "installCommand": "npm install",
+  "crons": [
+    {
+      "path": "/api/cron?task=procesar-notificaciones",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron?task=recordatorios-rechazo",
+      "schedule": "0 */2 * * *"
+    },
+    {
+      "path": "/api/cron?task=auto-finalizar",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron?task=recordatorios-pago",
+      "schedule": "0 */12 * * *"
+    },
+    {
+      "path": "/api/cron?task=limpiar-notificaciones",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron?task=cancelar-abandonados",
+      "schedule": "0 3 * * *"
+    }
+  ]
+
 }
