@@ -4,6 +4,7 @@
   
   export let data; // Recibe datos del +layout.server.js (usuario)
   
+  
   let sidebarOpen = false;
 </script>
 
