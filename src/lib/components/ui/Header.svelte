@@ -4,6 +4,7 @@
   import { Menu, X, ShoppingCart, Store, Settings, Home } from 'lucide-svelte';
   import { cantidadItems } from '$lib/stores/carritoStore';
   import CarritoIcon from '$lib/components/cart/CarritoIcon.svelte';
+  import { Edit } from 'lucide-svelte';
   
   export let configuracion = {};
   
@@ -12,6 +13,7 @@
   const navLinksMobile = [
     { href: '/', label: 'Catálogo' },
     { href: '/empresa', label: 'Acerca de' },
+    //{ href: '/editar', label: 'Pedidos' },
     { href: '/carrito', label: 'Mi Carrito' }
   ];
   
