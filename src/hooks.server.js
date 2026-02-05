@@ -11,8 +11,12 @@ const PROTECTED_ROUTES = [
   '/configuracion',
   '/categorias',
   '/reportes',
-  '/api/pedidos',
   '/api/upload'
+];
+
+// Endpoints API protegidos (solo admin)
+const PROTECTED_API_ROUTES = [
+  '/api/admin'
 ];
 
 export async function handle({ event, resolve }) {
@@ -37,8 +41,19 @@ export async function handle({ event, resolve }) {
     path === route || path.startsWith(route + '/')
   );
 
+  const isProtectedAPI = PROTECTED_API_ROUTES.some(route =>
+    path.startsWith(route)
+  );
+
   // Si es ruta protegida y no hay token, redirigir a login
-  if (isProtectedRoute && !token) {
+  if ((isProtectedRoute || isProtectedAPI) && !token) {
+    // Para APIs, devolver JSON en lugar de redirigir
+    if (path.startsWith('/api/')) {
+      return json(
+        { success: false, error: 'No autorizado' },
+        { status: 401 }
+      );
+    }
     throw redirect(302, '/login');
   }
 
@@ -64,12 +79,12 @@ export async function handle({ event, resolve }) {
   }
 
   // ========================================
-  // 4. RATE LIMITING PARA APIs
+  // 4. RATE LIMITING PARA APIs PROTEGIDAS
   // ========================================
   if (path.startsWith('/api/')) {
-    const isProtected = PROTECTED_ROUTES.some(route => path.startsWith(route));
+    const needsRateLimit = PROTECTED_API_ROUTES.some(route => path.startsWith(route));
     
-    if (isProtected) {
+    if (needsRateLimit) {
       const check = rateLimit(event.request, path);
       
       if (!check.allowed) {
