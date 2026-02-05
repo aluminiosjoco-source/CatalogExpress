@@ -1,9 +1,9 @@
 // src/lib/cloudinary.js
-import { CLOUDINARY_CLOUD_NAME, PUBLIC_CLOUDINARY_UPLOAD_PRESET } from '$env/static/private';
+import { CLOUDINARY_CLOUD_NAME, CLOUDINARY_UPLOAD_PRESET_PUBLIC } from '$env/static/private';
 
 export const cloudinaryConfig = {
   cloudName: CLOUDINARY_CLOUD_NAME,
-  uploadPreset: PUBLIC_CLOUDINARY_UPLOAD_PRESET
+  uploadPreset: CLOUDINARY_UPLOAD_PRESET_PUBLIC
 };
 
 export async function uploadToCloudinary(file) {
@@ -22,3 +22,4 @@ export async function uploadToCloudinary(file) {
   return data.secure_url;
 
 }
+
